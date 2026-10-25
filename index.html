@@ -1,123 +1,450 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="dark scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynex Core | Systems & Infrastructure</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyanCore: '#00B4D8',
+                        darkBg: '#090A0F',
+                        darkCard: '#11131C',
+                        lightBg: '#F8FAFC',
+                        lightCard: '#FFFFFF'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #090A0F; color: #FFFFFF; }
-        .grid-bg { background-image: radial-gradient(rgba(0, 180, 216, 0.12) 1px, transparent 1px); background-size: 32px 32px; }
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .grid-pattern {
+            background-size: 36px 36px;
+            background-image: radial-gradient(rgba(0, 180, 216, 0.14) 1px, transparent 1px);
+        }
     </style>
 </head>
-<body class="grid-bg antialiased selection:bg-[#00B4D8] selection:text-black">
+<body class="bg-lightBg text-slate-900 dark:bg-darkBg dark:text-white transition-colors duration-300 grid-pattern antialiased selection:bg-cyanCore selection:text-black">
 
     <!-- Navbar -->
-    <header class="border-b border-white/10 bg-[#090A0F]/80 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
-            <div>
-                <div class="text-xl md:text-2xl font-extrabold tracking-wider">
-                    <span class="text-gray-100">ZYNEX</span> <span class="text-[#00B4D8] font-semibold">CORE</span>
+    <header class="sticky top-0 z-50 border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-darkBg/80 backdrop-blur-xl transition-colors">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="group">
+                <div class="text-xl md:text-2xl font-extrabold tracking-wider flex items-center gap-1.5">
+                    <span class="text-slate-900 dark:text-white">ZYNEX</span>
+                    <span class="text-cyanCore font-semibold">CORE</span>
                 </div>
-                <div class="text-[9px] tracking-[0.28em] text-gray-400 uppercase">Systems & Infrastructure</div>
-            </div>
-            <nav class="hidden md:flex space-x-8 text-sm text-gray-300">
-                <a href="#solutions" class="hover:text-[#00B4D8] transition">Solutions</a>
-                <a href="#plans" class="hover:text-[#00B4D8] transition">Managed Plans</a>
-                <a href="#contact" class="hover:text-[#00B4D8] transition">Contact</a>
-            </nav>
-            <a href="mailto:zynexcorehq@outlook.com" class="px-4 py-2 text-xs md:text-sm font-semibold bg-[#00B4D8] text-black rounded hover:bg-cyan-400 transition">
-                Book a System Audit
+                <div class="text-[9px] tracking-[0.28em] text-slate-500 dark:text-slate-400 uppercase">Systems & Infrastructure</div>
             </a>
+
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600 dark:text-slate-300">
+                <a href="#demo" class="hover:text-cyanCore transition">Live Demo</a>
+                <a href="#solutions" class="hover:text-cyanCore transition">Capabilities</a>
+                <a href="#plans" class="hover:text-cyanCore transition">Retainer Plans</a>
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <!-- Light / Dark Mode Toggle -->
+                <button id="themeToggle" onclick="toggleTheme()" class="p-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-100 dark:bg-darkCard text-slate-700 dark:text-slate-200 hover:border-cyanCore transition" title="Toggle Light/Dark Mode">
+                    <svg id="sunIcon" class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <svg id="moonIcon" class="w-4 h-4 block dark:hidden text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                </button>
+
+                <a href="mailto:zynexcorehq@outlook.com?subject=System%20Audit%20Request%20-%20Zynex%20Core" class="px-4 py-2.5 text-xs md:text-sm font-semibold bg-cyanCore text-slate-950 rounded-lg hover:bg-cyan-400 transition shadow-lg shadow-cyanCore/20">
+                    Book System Audit
+                </a>
+            </div>
         </div>
     </header>
 
     <!-- Hero Section -->
-    <section class="max-w-6xl mx-auto px-6 py-24 md:py-32 text-center">
-        <div class="inline-block px-3 py-1 mb-6 text-xs font-medium tracking-widest text-[#00B4D8] uppercase bg-[#00B4D8]/10 border border-[#00B4D8]/30 rounded-full">
-            Custom B2B Engineering & Managed Retainers
+    <section class="max-w-7xl mx-auto px-6 pt-20 pb-16 md:pt-28 md:pb-24 text-center relative">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 mb-8 text-xs font-mono uppercase tracking-widest text-cyanCore bg-cyanCore/10 border border-cyanCore/30 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            All Infrastructure Operational • 99.98% Uptime
         </div>
-        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight max-w-4xl mx-auto">
-            We Engineer & Maintain the <span class="text-[#00B4D8]">Core Infrastructure</span> Behind Your Business.
+        <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] max-w-5xl mx-auto">
+            Autonomous Systems & <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyanCore to-blue-500">Core Infrastructure</span> for Modern Business.
         </h1>
-        <p class="mt-6 text-gray-400 text-lg md:text-xl max-w-2xl mx-auto font-light">
-            Custom AI workflows, autonomous systems, and internal software tools—built for your exact operational bottlenecks and maintained 24/7 under predictable monthly or annual plans.
+        <p class="mt-6 text-slate-600 dark:text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-normal leading-relaxed">
+            We design, engineer, and maintain custom AI workflows, internal software tools, and automated pipelines—backed by 24/7 monitoring under predictable monthly or annual plans.
         </p>
         <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-            <a href="mailto:zynexcorehq@outlook.com?subject=System%20Inquiry%20-%20Zynex%20Core" class="px-8 py-4 bg-[#00B4D8] text-black font-bold rounded hover:bg-cyan-400 transition">
-                Request Custom System
+            <a href="#demo" class="px-8 py-4 bg-cyanCore text-slate-950 font-bold rounded-lg hover:bg-cyan-400 transition shadow-xl shadow-cyanCore/20">
+                Try Live Interactive Demo ↓
             </a>
-            <a href="#solutions" class="px-8 py-4 border border-white/15 text-gray-200 font-medium rounded hover:border-[#00B4D8] transition">
-                Explore Capabilities
+            <a href="#plans" class="px-8 py-4 border border-slate-300 dark:border-white/15 bg-white/60 dark:bg-darkCard/60 text-slate-800 dark:text-slate-200 font-semibold rounded-lg hover:border-cyanCore transition">
+                View Managed Plans
             </a>
         </div>
     </section>
 
-    <!-- Solutions Section -->
-    <section id="solutions" class="max-w-6xl mx-auto px-6 py-20 border-t border-white/10">
-        <h2 class="text-2xl md:text-3xl font-bold text-center mb-12">Core Capabilities</h2>
+    <!-- DEMO 01: Interactive AI Workflow Simulator -->
+    <section id="demo" class="max-w-7xl mx-auto px-6 py-16 border-t border-slate-200 dark:border-white/10">
+        <div class="text-center max-w-3xl mx-auto mb-12">
+            <div class="text-cyanCore text-xs font-mono uppercase tracking-widest mb-2">Interactive Proof of Work // Demo 01</div>
+            <h2 class="text-3xl md:text-4xl font-bold">Live Autonomous Lead & Triage Engine</h2>
+            <p class="mt-3 text-slate-600 dark:text-slate-400 text-sm md:text-base">
+                Test how a custom Zynex Core workflow captures an incoming client inquiry, qualifies intent via AI, syncs structured JSON to your CRM, and dispatches an instant personalized response in under 2 seconds.
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-8 items-start bg-white dark:bg-darkCard border border-slate-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-xl">
+            <!-- Left: Input Controls -->
+            <div class="lg:col-span-5 space-y-5">
+                <div>
+                    <label class="block text-xs font-mono uppercase text-slate-500 dark:text-slate-400 mb-2">1. Select Industry Scenario</label>
+                    <select id="scenarioSelect" onchange="loadScenario()" class="w-full p-3 rounded-lg bg-slate-100 dark:bg-darkBg border border-slate-300 dark:border-white/15 text-sm font-medium focus:outline-none focus:border-cyanCore">
+                        <option value="b2b">B2B Agency / High-Ticket Consulting</option>
+                        <option value="realestate">Real Estate / Property Management</option>
+                        <option value="clinic">Healthcare / Dental & MedSpa Clinic</option>
+                        <option value="ecom">E-Commerce / Order & Support Triage</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-mono uppercase text-slate-500 dark:text-slate-400 mb-2">2. Incoming Customer Message (Editable)</label>
+                    <textarea id="leadInput" rows="4" class="w-full p-3 rounded-lg bg-slate-100 dark:bg-darkBg border border-slate-300 dark:border-white/15 text-sm focus:outline-none focus:border-cyanCore">Hi, we are a 25-person marketing agency in Austin looking to automate our client onboarding, invoicing, and Slack reporting. Budget is around $3,500. Can we talk this week?</textarea>
+                </div>
+
+                <button onclick="runWorkflowDemo()" id="runBtn" class="w-full py-3.5 px-6 bg-cyanCore text-slate-950 font-bold rounded-lg hover:bg-cyan-400 transition flex justify-center items-center gap-2 shadow-lg shadow-cyanCore/20">
+                    <span>⚡ Execute Autonomous Workflow</span>
+                </button>
+
+                <!-- Pipeline Steps Status -->
+                <div class="pt-4 border-t border-slate-200 dark:border-white/10 space-y-2.5 text-xs font-mono">
+                    <div id="step1" class="flex items-center justify-between p-2.5 rounded bg-slate-100 dark:bg-darkBg/60 text-slate-500">
+                        <span>01. Webhook Payload Capture</span>
+                        <span class="status-badge text-emerald-500 font-semibold">READY</span>
+                    </div>
+                    <div id="step2" class="flex items-center justify-between p-2.5 rounded bg-slate-100 dark:bg-darkBg/60 text-slate-500">
+                        <span>02. Zynex AI Intent & Scoring</span>
+                        <span class="status-badge">STANDBY</span>
+                    </div>
+                    <div id="step3" class="flex items-center justify-between p-2.5 rounded bg-slate-100 dark:bg-darkBg/60 text-slate-500">
+                        <span>03. CRM Database & Slack Sync</span>
+                        <span class="status-badge">STANDBY</span>
+                    </div>
+                    <div id="step4" class="flex items-center justify-between p-2.5 rounded bg-slate-100 dark:bg-darkBg/60 text-slate-500">
+                        <span>04. Autonomous Client Dispatch</span>
+                        <span class="status-badge">STANDBY</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Live Terminal & Output -->
+            <div class="lg:col-span-7 bg-slate-950 text-slate-100 rounded-xl border border-white/10 overflow-hidden">
+                <div class="px-4 py-3 bg-slate-900 border-b border-white/10 flex justify-between items-center text-xs font-mono">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                        <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                        <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                        <span class="ml-2 text-slate-400">zynex-core-engine // live-output.json</span>
+                    </div>
+                    <span id="execTime" class="text-cyanCore">Latency: 420ms</span>
+                </div>
+
+                <div class="p-6 space-y-6">
+                    <!-- Metrics Bar -->
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div class="p-3 rounded-lg bg-white/5 border border-white/10">
+                            <div class="text-[11px] font-mono text-slate-400 uppercase">AI Lead Score</div>
+                            <div id="metricScore" class="text-xl md:text-2xl font-extrabold text-emerald-400 mt-1">96 / 100</div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-white/5 border border-white/10">
+                            <div class="text-[11px] font-mono text-slate-400 uppercase">Priority Tier</div>
+                            <div id="metricPriority" class="text-xl md:text-2xl font-extrabold text-cyanCore mt-1">HIGH_VIP</div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-white/5 border border-white/10">
+                            <div class="text-[11px] font-mono text-slate-400 uppercase">Manual Time Saved</div>
+                            <div id="metricTime" class="text-xl md:text-2xl font-extrabold text-white mt-1">18 Mins</div>
+                        </div>
+                    </div>
+
+                    <!-- JSON Payload Output -->
+                    <div>
+                        <div class="text-xs font-mono text-slate-400 mb-2">Structured CRM & Database Payload:</div>
+                        <pre id="jsonOutput" class="p-4 rounded-lg bg-black/70 border border-white/10 text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed">{
+  "pipeline": "zynex_autonomous_v2",
+  "intent_detected": "Custom Agency Onboarding & Reporting Automation",
+  "estimated_deal_value": "$3,500",
+  "urgency": "Immediate (This Week)",
+  "crm_action": "Created Deal in HubSpot + Alerted Founder on Slack",
+  "status": "AWAITING_EXECUTION"
+}</pre>
+                    </div>
+
+                    <!-- Auto-Drafted Response -->
+                    <div>
+                        <div class="text-xs font-mono text-slate-400 mb-2">Instant Autonomous Email / WhatsApp Reply Dispatched:</div>
+                        <div id="aiReplyOutput" class="p-4 rounded-lg bg-cyanCore/10 border border-cyanCore/30 text-xs md:text-sm text-slate-200 leading-relaxed">
+                            "Hi there! Thanks for reaching out. We regularly build automated client onboarding, invoicing, and Slack reporting pipelines for agencies of your size. Given your $3,500 scope, we can deploy a full system within 10 days. Here is our calendar link to lock in a 15-minute architecture call this week..."
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Capabilities -->
+    <section id="solutions" class="max-w-7xl mx-auto px-6 py-20 border-t border-slate-200 dark:border-white/10">
+        <div class="text-center max-w-2xl mx-auto mb-14">
+            <div class="text-cyanCore text-xs font-mono uppercase tracking-widest mb-2">System Architecture</div>
+            <h2 class="text-3xl md:text-4xl font-bold">Engineered for Scale & Reliability</h2>
+        </div>
+
         <div class="grid md:grid-cols-3 gap-8">
-            <div class="p-8 rounded-lg bg-[#11131C] border border-white/10 hover:border-[#00B4D8]/50 transition">
-                <div class="text-[#00B4D8] text-sm font-mono mb-3">01 // AUTOMATION</div>
-                <h3 class="text-xl font-bold mb-3">Autonomous AI Workflows</h3>
-                <p class="text-gray-400 text-sm leading-relaxed">
-                    End-to-end AI agents, multi-app pipelines, and automated lead & operations systems that eliminate repetitive manual tasks.
+            <div class="p-8 rounded-2xl bg-white dark:bg-darkCard border border-slate-200 dark:border-white/10 hover:border-cyanCore transition shadow-sm">
+                <div class="text-cyanCore text-xs font-mono mb-3">01 // AUTONOMOUS WORKFLOWS</div>
+                <h3 class="text-xl font-bold mb-3">AI Pipelines & Agents</h3>
+                <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                    Multi-step AI agents, CRM synchronizations, automated lead triage, and document processing systems that run 24/7 without human intervention.
                 </p>
             </div>
-            <div class="p-8 rounded-lg bg-[#11131C] border border-white/10 hover:border-[#00B4D8]/50 transition">
-                <div class="text-[#00B4D8] text-sm font-mono mb-3">02 // INTERNAL TOOLS</div>
-                <h3 class="text-xl font-bold mb-3">Custom Web Systems & CRMs</h3>
-                <p class="text-gray-400 text-sm leading-relaxed">
-                    Tailored operational dashboards, client portals, and internal software built around how your team actually operates.
+            <div class="p-8 rounded-2xl bg-white dark:bg-darkCard border border-slate-200 dark:border-white/10 hover:border-cyanCore transition shadow-sm">
+                <div class="text-cyanCore text-xs font-mono mb-3">02 // INTERNAL SOFTWARE</div>
+                <h3 class="text-xl font-bold mb-3">Custom Portals & Dashboards</h3>
+                <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                    Bespoke web applications, client portals, and real-time operational control centers tailored to your exact business logic.
                 </p>
             </div>
-            <div class="p-8 rounded-lg bg-[#11131C] border border-white/10 hover:border-[#00B4D8]/50 transition">
-                <div class="text-[#00B4D8] text-sm font-mono mb-3">03 // OVERSIGHT</div>
-                <h3 class="text-xl font-bold mb-3">24/7 Managed Infrastructure</h3>
-                <p class="text-gray-400 text-sm leading-relaxed">
-                    Proactive uptime monitoring, instant bug resolution, API management, and continuous optimization so your systems never stall.
+            <div class="p-8 rounded-2xl bg-white dark:bg-darkCard border border-slate-200 dark:border-white/10 hover:border-cyanCore transition shadow-sm">
+                <div class="text-cyanCore text-xs font-mono mb-3">03 // CONTINUOUS OVERSIGHT</div>
+                <h3 class="text-xl font-bold mb-3">24/7 Managed Retainers</h3>
+                <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                    Proactive error recovery, server hosting, API token optimization, and instant bug resolution so your mission-critical tools never break.
                 </p>
             </div>
         </div>
     </section>
 
-    <!-- Subscription / Retainer Model -->
-    <section id="plans" class="max-w-6xl mx-auto px-6 py-20 border-t border-white/10">
-        <div class="bg-[#11131C] border border-white/10 rounded-xl p-8 md:p-12 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div class="max-w-xl">
-                <div class="text-[#00B4D8] text-xs font-mono uppercase tracking-widest mb-2">Predictable Subscription Model</div>
-                <h2 class="text-2xl md:text-3xl font-bold mb-4">Monthly & Annual Maintenance Plans</h2>
-                <p class="text-gray-400 text-sm leading-relaxed mb-6">
-                    Software isn't static. Once we engineer and deploy your custom system, our team handles hosting, error recovery, API updates, and technical support on a transparent monthly or discounted annual plan.
-                </p>
-                <ul class="space-y-2 text-sm text-gray-300">
-                    <li>✓ 24/7 Automated Error Monitoring & Rapid Bug Fixes</li>
-                    <li>✓ Managed Cloud Hosting & Database Security</li>
-                    <li>✓ Dedicated Technical Support & System Upgrades</li>
-                </ul>
+    <!-- Pricing / Retainer Plans with Monthly & Yearly Toggle -->
+    <section id="plans" class="max-w-7xl mx-auto px-6 py-20 border-t border-slate-200 dark:border-white/10">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <div class="text-cyanCore text-xs font-mono uppercase tracking-widest mb-2">Predictable Subscriptions</div>
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Build & Maintenance Plans</h2>
+            <p class="text-slate-600 dark:text-slate-400 text-sm">
+                Every custom system includes ongoing hosting, proactive monitoring, and rapid bug fixes.
+            </p>
+
+            <!-- Billing Toggle -->
+            <div class="mt-6 inline-flex items-center p-1 rounded-xl bg-slate-200 dark:bg-darkCard border border-slate-300 dark:border-white/10">
+                <button id="monthlyBtn" onclick="setBilling('monthly')" class="px-5 py-2 rounded-lg text-xs font-bold bg-cyanCore text-slate-950 transition">
+                    Monthly Billing
+                </button>
+                <button id="annualBtn" onclick="setBilling('annual')" class="px-5 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition">
+                    Annual Plan (Save 20%)
+                </button>
             </div>
-            <div class="w-full md:w-auto text-center bg-[#090A0F] p-8 rounded-lg border border-[#00B4D8]/30">
-                <div class="text-sm text-gray-400 mb-2">Ready to automate & scale?</div>
-                <div class="text-2xl font-extrabold text-white mb-6">Custom Scoped Plans</div>
-                <a href="mailto:zynexcorehq@outlook.com" class="block w-full px-6 py-3 bg-[#00B4D8] text-black font-bold rounded hover:bg-cyan-400 transition">
-                    Get a Proposal
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <!-- Plan 1 -->
+            <div class="p-8 rounded-2xl bg-white dark:bg-darkCard border border-slate-200 dark:border-white/10 flex flex-col justify-between">
+                <div>
+                    <div class="text-xs font-mono uppercase text-cyanCore mb-2">Core Automation Plan</div>
+                    <h3 class="text-2xl font-bold">Managed Workflow System</h3>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-2">Ideal for businesses automating lead generation, triage, or internal workflows.</p>
+                    <div class="my-6">
+                        <span id="price1" class="text-4xl font-extrabold">$290</span>
+                        <span class="text-slate-500 text-sm">/month + one-time custom setup</span>
+                    </div>
+                    <ul class="space-y-3 text-sm text-slate-600 dark:text-slate-300 mb-8">
+                        <li>✓ Custom AI Workflow or Agent Engineering</li>
+                        <li>✓ 24/7 Automated Error Alerts & Bug Resolution</li>
+                        <li>✓ Managed Server Hosting & Database Backups</li>
+                        <li>✓ Monthly Performance & API Optimization</li>
+                    </ul>
+                </div>
+                <a href="mailto:zynexcorehq@outlook.com?subject=Core%20Automation%20Plan%20Inquiry" class="block text-center py-3.5 px-6 rounded-lg border border-cyanCore text-cyanCore font-bold hover:bg-cyanCore hover:text-slate-950 transition">
+                    Request Custom Scope
+                </a>
+            </div>
+
+            <!-- Plan 2 -->
+            <div class="p-8 rounded-2xl bg-white dark:bg-darkCard border-2 border-cyanCore relative flex flex-col justify-between shadow-xl shadow-cyanCore/10">
+                <div class="absolute -top-3 right-6 px-3 py-1 bg-cyanCore text-slate-950 text-[10px] font-mono font-bold uppercase rounded-full">
+                    Most Popular B2B
+                </div>
+                <div>
+                    <div class="text-xs font-mono uppercase text-cyanCore mb-2">Full Infrastructure Partner</div>
+                    <h3 class="text-2xl font-bold">Custom Software + AI Suite</h3>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-2">Complete internal dashboards, custom portals, and multi-system AI automations.</p>
+                    <div class="my-6">
+                        <span id="price2" class="text-4xl font-extrabold">$590</span>
+                        <span class="text-slate-500 text-sm">/month + one-time custom setup</span>
+                    </div>
+                    <ul class="space-y-3 text-sm text-slate-600 dark:text-slate-300 mb-8">
+                        <li>✓ Custom Web Dashboard / Client Portal + AI Pipelines</li>
+                        <li>✓ Priority 24/7 SLA Support & Instant Hotfixes</li>
+                        <li>✓ Dedicated Cloud Architecture & Security Oversight</li>
+                        <li>✓ Ongoing Feature Enhancements & System Scaling</li>
+                    </ul>
+                </div>
+                <a href="mailto:zynexcorehq@outlook.com?subject=Full%20Infrastructure%20Plan%20Inquiry" class="block text-center py-3.5 px-6 rounded-lg bg-cyanCore text-slate-950 font-bold hover:bg-cyan-400 transition">
+                    Book Architecture Call
                 </a>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer id="contact" class="border-t border-white/10 mt-12 py-12 text-center text-sm text-gray-500">
-        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+    <footer class="border-t border-slate-200 dark:border-white/10 mt-12 py-12 text-sm text-slate-500">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-                <span class="font-bold text-gray-300">ZYNEX CORE</span> — Systems & Infrastructure
+                <span class="font-extrabold text-slate-900 dark:text-white">ZYNEX</span> <span class="text-cyanCore font-semibold">CORE</span> — Systems & Infrastructure
             </div>
             <div>
-                Inquiries: <a href="mailto:zynexcorehq@outlook.com" class="text-[#00B4D8] hover:underline">zynexcorehq@outlook.com</a>
+                Direct B2B Inquiries: <a href="mailto:zynexcorehq@outlook.com" class="text-cyanCore font-medium hover:underline">zynexcorehq@outlook.com</a>
             </div>
         </div>
     </footer>
 
+    <!-- Interactive Scripts -->
+    <script>
+        // Theme Switcher
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+        }
+
+        // Billing Toggle
+        function setBilling(mode) {
+            const p1 = document.getElementById('price1');
+            const p2 = document.getElementById('price2');
+            const mBtn = document.getElementById('monthlyBtn');
+            const aBtn = document.getElementById('annualBtn');
+
+            if (mode === 'annual') {
+                p1.innerText = '$230';
+                p2.innerText = '$470';
+                aBtn.className = 'px-5 py-2 rounded-lg text-xs font-bold bg-cyanCore text-slate-950 transition';
+                mBtn.className = 'px-5 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition';
+            } else {
+                p1.innerText = '$290';
+                p2.innerText = '$590';
+                mBtn.className = 'px-5 py-2 rounded-lg text-xs font-bold bg-cyanCore text-slate-950 transition';
+                aBtn.className = 'px-5 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition';
+            }
+        }
+
+        // Demo Scenarios Data
+        const scenarios = {
+            b2b: {
+                input: "Hi, we are a 25-person marketing agency in Austin looking to automate our client onboarding, invoicing, and Slack reporting. Budget is around $3,500. Can we talk this week?",
+                score: "96 / 100",
+                priority: "HIGH_VIP",
+                time: "18 Mins",
+                json: {
+                    pipeline: "zynex_b2b_intake_v2",
+                    intent_detected: "Agency Onboarding & Billing Automation",
+                    estimated_budget: "$3,500",
+                    decision_timeline: "Immediate (This Week)",
+                    crm_sync: "Deal Created in HubSpot + Founder Slack Alert Sent",
+                    status: "QUALIFIED_READY"
+                },
+                reply: "\"Hi there! Thanks for reaching out. We regularly engineer automated client onboarding, invoicing, and Slack reporting systems for agencies of your size. Given your $3,500 scope, we can deploy a full setup within 10 days. Here is our booking link to lock in a 15-minute call this week...\""
+            },
+            realestate: {
+                input: "Hello, I'm looking for a 3-bedroom modern apartment in downtown Miami under $4,200/month. Ready to move in by the 1st of next month. Pre-approved credit.",
+                score: "92 / 100",
+                priority: "HOT_BUYER",
+                time: "15 Mins",
+                json: {
+                    pipeline: "zynex_realty_qualifier",
+                    intent_detected: "Residential Lease Inquiry (3BR Miami)",
+                    budget_verified: "$4,200/mo (Credit Pre-Approved)",
+                    move_in_window: "Next Month (1st)",
+                    crm_sync: "Matched 4 Properties + Assigned Senior Agent",
+                    status: "TOUR_LINK_DISPATCHED"
+                },
+                reply: "\"Hello! We have 4 available 3-bedroom units in downtown Miami under $4,200/mo ready for move-in on the 1st. Since you're pre-approved, I've attached the private virtual tour links and our agent calendar to book a viewing tomorrow.\""
+            },
+            clinic: {
+                input: "Hi, do you have any openings this Thursday or Friday afternoon for a full dental implant consultation? I have Delta Dental PPO insurance.",
+                score: "94 / 100",
+                priority: "HIGH_VALUE",
+                time: "12 Mins",
+                json: {
+                    pipeline: "zynex_med_scheduler",
+                    procedure: "Dental Implant Consultation",
+                    insurance_provider: "Delta Dental PPO (Verified Eligible)",
+                    preferred_slot: "Thursday / Friday PM",
+                    crm_sync: "Held Slot in Practice EHR + SMS Confirmation Ready",
+                    status: "SLOT_RESERVED"
+                },
+                reply: "\"Hi! Yes, we accept Delta Dental PPO and have an opening for a Dental Implant Consultation this Thursday at 2:30 PM or Friday at 4:00 PM. Reply 'THU' or 'FRI' to instantly lock in your appointment!\""
+            },
+            ecom: {
+                input: "We are a Shopify brand doing 1,200 orders/month and need an AI system to automatically handle WISMO (where is my order) tickets, returns, and VIP wholesale inquiries.",
+                score: "95 / 100",
+                priority: "ENTERPRISE",
+                time: "22 Mins",
+                json: {
+                    pipeline: "zynex_ecom_triage",
+                    store_volume: "1,200+ Orders/Month (Shopify)",
+                    automation_scope: "Order Tracking + Returns + Wholesale Routing",
+                    crm_sync: "Logged in Gorgias/Zendesk + Priority Proposal Created",
+                    status: "AUDIT_SCHEDULED"
+                },
+                reply: "\"Thanks for reaching out! At 1,200+ monthly orders, our Shopify AI Triage system typically resolves 78% of tracking and return tickets automatically while routing wholesale leads straight to your sales team. Let's review your setup this week.\""
+            }
+        };
+
+        function loadScenario() {
+            const key = document.getElementById('scenarioSelect').value;
+            document.getElementById('leadInput').value = scenarios[key].input;
+        }
+
+        function runWorkflowDemo() {
+            const key = document.getElementById('scenarioSelect').value;
+            const customText = document.getElementById('leadInput').value;
+            const btn = document.getElementById('runBtn');
+            const steps = ['step1', 'step2', 'step3', 'step4'];
+
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳ Running Zynex Core Engine...</span>';
+
+            steps.forEach(id => {
+                const badge = document.querySelector(`#${id} .status-badge`);
+                badge.innerText = 'PROCESSING...';
+                badge.className = 'status-badge text-amber-400 animate-pulse';
+            });
+
+            steps.forEach((id, index) => {
+                setTimeout(() => {
+                    const badge = document.querySelector(`#${id} .status-badge`);
+                    badge.innerText = 'COMPLETED ✓';
+                    badge.className = 'status-badge text-emerald-400 font-bold';
+                }, (index + 1) * 300);
+            });
+
+            setTimeout(() => {
+                const data = scenarios[key];
+                const payload = { ...data.json, raw_input_preview: customText.substring(0, 65) + "..." };
+
+                document.getElementById('metricScore').innerText = data.score;
+                document.getElementById('metricPriority').innerText = data.priority;
+                document.getElementById('metricTime').innerText = data.time;
+                document.getElementById('execTime').innerText = 'Latency: ' + (Math.floor(Math.random() * 180) + 310) + 'ms';
+                document.getElementById('jsonOutput').innerText = JSON.stringify(payload, null, 2);
+                document.getElementById('aiReplyOutput').innerText = data.reply;
+
+                btn.disabled = false;
+                btn.innerHTML = '<span>⚡ Execute Autonomous Workflow Again</span>';
+            }, 1300);
+        }
+    </script>
 </body>
 </html>
