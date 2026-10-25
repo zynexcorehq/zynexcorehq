@@ -407,20 +407,57 @@
             document.getElementById('leadInput').value = scenarios[key].input;
         }
 
-        function runWorkflowDemo() {
+        async function runWorkflowDemo() {
             const key = document.getElementById('scenarioSelect').value;
             const customText = document.getElementById('leadInput').value;
             const btn = document.getElementById('runBtn');
             const steps = ['step1', 'step2', 'step3', 'step4'];
 
             btn.disabled = true;
-            btn.innerHTML = '<span>⏳ Running Zynex Core Engine...</span>';
+            btn.innerHTML = '<span>⏳ Running Live Zynex AI + Supabase...</span>';
 
             steps.forEach(id => {
                 const badge = document.querySelector(`#${id} .status-badge`);
                 badge.innerText = 'PROCESSING...';
                 badge.className = 'status-badge text-amber-400 animate-pulse';
             });
+
+            try {
+                const res = await fetch('https://zynex-api.zynexcorehq.workers.dev', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scenario: key, message: customText })
+                });
+                const data = await res.json();
+
+                steps.forEach(id => {
+                    const badge = document.querySelector(`#${id} .status-badge`);
+                    badge.innerText = 'COMPLETED ✓';
+                    badge.className = 'status-badge text-emerald-400 font-bold';
+                });
+
+                document.getElementById('metricScore').innerText = data.lead_score + ' / 100';
+                document.getElementById('metricPriority').innerText = data.priority_tier;
+                document.getElementById('metricTime').innerText = data.manual_time_saved || '15 Mins';
+                document.getElementById('execTime').innerText = 'Live AI Latency: ' + data.latency;
+
+                document.getElementById('jsonOutput').innerText = JSON.stringify({
+                    pipeline: "zynex_live_groq_supabase_v1",
+                    intent_detected: data.intent_detected,
+                    estimated_deal_value: data.estimated_deal_value,
+                    urgency: data.urgency,
+                    database_sync: "Saved to Supabase (automation_logs)",
+                    status: "AUTONOMOUS_COMPLETE"
+                }, null, 2);
+
+                document.getElementById('aiReplyOutput').innerText = `"${data.ai_reply}"`;
+            } catch (err) {
+                alert("API Connection Error: Check Worker URL or Keys.");
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<span>⚡ Execute Live Autonomous Workflow</span>';
+        });
 
             steps.forEach((id, index) => {
                 setTimeout(() => {
