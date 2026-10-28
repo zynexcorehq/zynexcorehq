@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" class="dark"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin | Zynex Core</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Sora','sans-serif']},colors:{cy:'#00B4D8'}}}}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>body{font-family:Sora,sans-serif}.field{width:100%;border-radius:.5rem;border:1px solid rgb(148 163 184/.4);background:transparent;padding:.5rem .7rem;font-size:.875rem}.field:focus{outline:2px solid #00B4D8}.btn{padding:.5rem 1rem;border-radius:.5rem;background:#00B4D8;color:#04202a;font-weight:600;font-size:.875rem}.btn2{padding:.5rem 1rem;border-radius:.5rem;border:1px solid rgb(148 163 184/.5);font-size:.875rem}.card{border:1px solid rgb(148 163 184/.3);border-radius:.75rem;padding:1rem}label{font-size:.75rem;font-weight:600}</style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-[#070B12] dark:text-slate-200">
+<header class="border-b border-slate-200 dark:border-white/10"><div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+ <b>ZYNEX <span class="text-cy">CORE</span> <span class="text-xs font-normal text-slate-500 ml-2">Admin</span></b>
+ <div class="flex gap-2"><button id="tabO" class="btn">Orders</button><button id="tabP" class="btn2">Projects</button><button id="theme" class="btn2">Theme</button><a href="index.html" class="btn2">Site</a></div></div></header>
+
+<main id="ordersView" class="max-w-7xl mx-auto px-4 py-6 grid lg:grid-cols-3 gap-6">
+ <aside><div id="list" class="space-y-2"></div></aside>
+ <section id="detail" class="lg:col-span-2 text-slate-500">Select an order.</section>
+</main>
+
+<main id="projView" class="hidden max-w-4xl mx-auto px-4 py-6 space-y-6">
+ <form id="pf" class="card space-y-3"><h2 class="font-bold">Add completed project</h2>
+  <div><label>Title *</label><input id="p_title" class="field" required></div>
+  <div><label>Problem it solved (why it was built) *</label><textarea id="p_prob" rows="2" class="field" required></textarea></div>
+  <div><label>Key capabilities (one per line) *</label><textarea id="p_caps" rows="4" class="field" required></textarea></div>
+  <div><label>Full description</label><textarea id="p_desc" rows="4" class="field"></textarea></div>
+  <div class="grid sm:grid-cols-2 gap-3"><div><label>Live preview URL</label><input id="p_live" type="url" class="field"></div>
+   <div><label>Video file or YouTube URL</label><input id="p_vurl" class="field" placeholder="https://youtu.be/…"><input id="p_vfile" type="file" accept="video/*" class="field mt-2"></div></div>
+  <button class="btn">Publish project</button> <span id="pmsg" class="text-sm"></span></form>
+ <div id="plist" class="space-y-2"></div>
+</main>
+
+<script>
+const SUPABASE_URL='https://klzzixqaqhmiwwglsoda.supabase.co', SUPABASE_ANON_KEY='sb_publishable_jNskkayIkO8uUGHKhcuyaA_sRV2LHc9';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY), $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>n==null?'-':'$'+Number(n).toLocaleString();
+let me, cur, chan='order', rt=[];
+$('theme').onclick=()=>document.documentElement.classList.toggle('dark');
+$('tabO').onclick=()=>{ordersView.classList.remove('hidden');projView.classList.add('hidden');$('tabO').className='btn';$('tabP').className='btn2'};
+$('tabP').onclick=()=>{projView.classList.remove('hidden');ordersView.classList.add('hidden');$('tabP').className='btn';$('tabO').className='btn2';loadProj()};
+
+(async()=>{const{data:{session}}=await sb.auth.getSession();if(!session)return location='index.html';me=session.user;
+ const{data:p}=await sb.from('profiles').select('role').eq('id',me.id).single();if(p?.role!=='admin'){document.body.innerHTML='<p class="p-10">Admin access only.</p>';return}
+ loadList();sb.channel('ord').on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>{loadList()}).on('postgres_changes',{event:'*',schema:'public',table:'offers'},()=>{if(cur)loadOffers()}).subscribe()})();
+
+async function loadList(){
+ const{data}=await sb.from('orders').select('id,status,client_name,company_name,system_description,created_at').order('created_at',{ascending:false});
+ $('list').innerHTML=(data||[]).map(o=>`<button data-id="${o.id}" class="card w-full text-left hover:border-cy"><div class="text-xs text-cy">${o.status.replace(/_/g,' ')}</div><div class="font-semibold text-sm">${esc(o.client_name)} ${o.company_name?'· '+esc(o.company_name):''}</div><div class="text-xs truncate text-slate-500">${esc(o.system_description)}</div></button>`).join('')||'<p class="text-sm text-slate-500">No orders yet.</p>';
+ $('list').querySelectorAll('button').forEach(b=>b.onclick=()=>openOrder(b.dataset.id));
+}
+const upd=async(patch)=>{const{error}=await sb.from('orders').update(patch).eq('id',cur.id);if(error)alert(error.message);else openOrder(cur.id,true)};
+
+async function openOrder(id,keep){
+ const{data:o}=await sb.from('orders').select('*').eq('id',id).single();cur=o;
+ const files=await Promise.all((o.attachments||[]).map(async a=>{const{data}=await sb.storage.from('order-files').createSignedUrl(a.path,3600);return data?`<a class="underline block" href="${data.signedUrl}" target="_blank">${esc(a.name)}</a>`:''}));
+ const contacts=['telegram','whatsapp','instagram','facebook'].filter(k=>o[k]).map(k=>`${k}: ${esc(o[k])}`).join(' · ');
+ const paid=['paid','completed'].includes(o.status);
+ $('detail').className='lg:col-span-2 space-y-4 text-slate-800 dark:text-slate-200';
+ $('detail').innerHTML=`
+ <div class="card"><div class="flex justify-between"><span class="text-xs text-cy">${o.status.replace(/_/g,' ')}</span><span class="text-xs text-slate-500">${new Date(o.created_at).toLocaleString()}</span></div>
+  <p class="font-semibold mt-1">${esc(o.client_name)} ${esc(o.company_name||'')}</p><p class="text-xs text-slate-500">${esc(o.company_description||'')}</p>
+  <p class="text-sm whitespace-pre-line mt-3">${esc(o.system_description)}</p><p class="text-xs mt-3">${esc(o.email)} · ${contacts}</p><div class="text-xs mt-2">${files.join('')}</div></div>
+
+ <div class="card space-y-3"><b>Pricing and scope approval</b>
+  <div class="grid sm:grid-cols-4 gap-3">
+   <div><label>Tier</label><select id="f_tier" class="field"><option value="1">1: small, one-time</option><option value="2">2: standard/large</option></select></div>
+   <div><label>Build price (USD)</label><input id="f_price" type="number" min="0" class="field" value="${o.build_price??''}"></div>
+   <div class="t2"><label>Plan after 3 free months</label><select id="f_plan" class="field"><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+   <div class="t2"><label>Subscription price</label><input id="f_sub" type="number" min="0" class="field" value="${o.subscription_price??''}"></div></div>
+  <div class="flex gap-2 flex-wrap"><button id="sendAppr" class="btn" ${paid?'disabled':''}>Accept and send for client approval</button><button id="reject" class="btn2">Reject order</button></div></div>
+
+ <div class="card space-y-3"><b>Trial, payment and delivery</b>
+  <div class="grid sm:grid-cols-2 gap-3"><div><label>Trial URL</label><input id="f_trial" class="field" value="${esc(o.trial_url||'')}"></div>
+   <div><label>Delivery URL (share only after paid)</label><input id="f_deliv" class="field" value="${esc(o.delivery_url||'')}"></div>
+   <div><label>Custom payment link</label><input id="f_link" class="field" value="${esc(o.payment_link||'')}"></div>
+   <div><label>Bank / crypto instructions</label><textarea id="f_note" rows="2" class="field">${esc(o.payment_note||'')}</textarea></div></div>
+  <div class="flex gap-2 flex-wrap"><button id="startTrial" class="btn">Activate 3-day trial</button><button id="saveInfo" class="btn2">Save links</button><button id="reqPay" class="btn2">Move to awaiting payment</button>
+   <button id="markPaid" class="btn2 border-emerald-500" ${paid?'disabled':''}>Mark order as paid</button><button id="complete" class="btn2">Mark 100% completed</button></div>
+  ${o.trial_ends_at?`<p class="text-xs text-slate-500">Trial ends ${new Date(o.trial_ends_at).toLocaleString()}</p>`:''}</div>
+
+ <div class="card"><b>Offers</b><div id="offers" class="mt-3 space-y-2 text-sm"></div></div>
+ <div class="card"><div class="flex gap-2 mb-3"><button id="tOrder" class="btn">Order chat</button><button id="tSupport" class="btn2">Support chat ${paid?'':'(locked)'}</button></div><div id="chat"></div></div>`;
+ $('f_tier').value=o.tier||1;$('f_plan').value=o.subscription_plan||'monthly';
+ const tierUI=()=>document.querySelectorAll('.t2').forEach(e=>e.style.display=$('f_tier').value==='2'?'':'none');tierUI();$('f_tier').onchange=tierUI;
+ $('sendAppr').onclick=()=>{const t=+$('f_tier').value,p=parseFloat($('f_price').value);if(!(p>0))return alert('Enter a build price.');
+  const patch={tier:t,build_price:p,status:'awaiting_approval',free_maintenance_months:t===2?3:0,subscription_plan:t===2?$('f_plan').value:null,subscription_price:t===2?parseFloat($('f_sub').value)||null:null};
+  if(t===2&&!patch.subscription_price)return alert('Tier 2 needs a subscription price.');upd(patch)};
+ $('reject').onclick=()=>confirm('Reject this order?')&&upd({status:'rejected'});
+ $('saveInfo').onclick=()=>upd({trial_url:$('f_trial').value.trim()||null,delivery_url:$('f_deliv').value.trim()||null,payment_link:$('f_link').value.trim()||null,payment_note:$('f_note').value.trim()||null});
+ $('startTrial').onclick=()=>{const u=$('f_trial').value.trim();if(!u)return alert('Enter the trial URL.');const now=new Date();upd({trial_url:u,trial_starts_at:now.toISOString(),trial_ends_at:new Date(+now+3*864e5).toISOString(),status:'trial'})};
+ $('reqPay').onclick=()=>upd({status:'awaiting_payment',payment_link:$('f_link').value.trim()||null,payment_note:$('f_note').value.trim()||null});
+ $('markPaid').onclick=async()=>{if(!confirm('Confirm payment received for this order?'))return;const{error}=await sb.rpc('admin_mark_paid',{oid:o.id,amt:o.build_price,ref:prompt('Payment reference (optional):')||'manual'});error?alert(error.message):openOrder(o.id,true)};
+ $('complete').onclick=()=>upd({status:'completed'});
+ $('tOrder').onclick=()=>{chan='order';chatUI(o)};$('tSupport').onclick=()=>{chan='support';chatUI(o)};
+ loadOffers();if(!keep)chan='order';chatUI(o);
+}
+
+async function loadOffers(){
+ const{data}=await sb.from('offers').select('*').eq('order_id',cur.id).order('created_at');
+ $('offers').innerHTML=(data||[]).map(f=>`<div class="border-b border-slate-300/30 pb-2"><div class="flex justify-between items-center gap-2"><span>${f.from_role==='client'?'Client':'You'}: <b>${money(f.amount)}</b> <span class="text-xs text-slate-500">${esc(f.note||'')}</span></span><span class="text-xs text-cy">${f.status}</span></div>
+ ${f.from_role==='client'&&f.status==='pending'?`<div class="flex gap-2 mt-2 items-center"><button class="btn" data-act="ok" data-id="${f.id}">Approve</button><input type="number" placeholder="Counter price" class="field !w-32" id="c${f.id}"><button class="btn2" data-act="ctr" data-id="${f.id}">Reject and counter</button></div>`:''}</div>`).join('')||'<p class="text-slate-500">No offers.</p>';
+ $('offers').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
+  if(b.dataset.act==='ok'){await sb.rpc('admin_approve_offer',{offer_id:b.dataset.id})}
+  else{const a=parseFloat($('c'+b.dataset.id).value);if(!(a>0))return alert('Enter a counter price.');
+   await sb.from('offers').update({status:'countered'}).eq('id',b.dataset.id);await sb.from('offers').insert({order_id:cur.id,from_role:'admin',amount:a,note:'Counter-offer'})}
+  loadOffers();openOrder(cur.id,true)});
+}
+
+async function chatUI(o){
+ rt.forEach(c=>sb.removeChannel(c));rt=[];
+ $('tOrder').className=chan==='order'?'btn':'btn2';$('tSupport').className=chan==='support'?'btn':'btn2';
+ $('chat').innerHTML=`<div id="msgs" class="h-72 overflow-y-auto space-y-2 mb-3"></div><form id="cf" class="flex gap-2"><label class="btn2 cursor-pointer">Attach<input id="cfile" type="file" class="hidden"></label><input id="ctext" class="field" placeholder="Reply to client…" autocomplete="off"><button class="btn">Send</button></form>`;
+ const draw=async m=>{const mine=m.sender_id===me.id;let f='';if(m.file_path){const{data}=await sb.storage.from('order-files').createSignedUrl(m.file_path,3600);const img=(m.file_type||'').startsWith('image/');f=data?(img?`<a href="${data.signedUrl}" target="_blank"><img src="${data.signedUrl}" class="max-w-[200px] rounded mt-1"></a>`:`<a class="underline block mt-1" href="${data.signedUrl}" target="_blank">${esc(m.file_name)}</a>`):''}
+  const d=document.createElement('div');d.className=`max-w-[80%] rounded-lg px-3 py-2 text-sm ${mine?'ml-auto bg-cy text-[#04202a]':'bg-slate-200 dark:bg-white/10'}`;d.innerHTML=esc(m.body||'')+f;$('msgs').appendChild(d);$('msgs').scrollTop=1e9};
+ const{data}=await sb.from('chat_messages').select('*').eq('order_id',o.id).eq('channel',chan).order('created_at');for(const m of data||[])await draw(m);
+ rt.push(sb.channel('c'+o.id+chan).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:`order_id=eq.${o.id}`},p=>{if(p.new.channel===chan&&p.new.sender_id!==me.id)draw(p.new)}).subscribe());
+ $('cf').onsubmit=async e=>{e.preventDefault();const body=$('ctext').value.trim(),f=$('cfile').files[0];if(!body&&!f)return;
+  const row={order_id:o.id,channel:chan,sender_id:me.id,body};
+  if(f){if(f.size>50*1048576)return alert('File over 50 MB');const path=`${o.client_id}/${Date.now()}_${f.name.replace(/[^\w.\-]/g,'_')}`;const{error}=await sb.storage.from('order-files').upload(path,f);if(error)return alert(error.message);Object.assign(row,{file_path:path,file_name:f.name,file_type:f.type})}
+  const{data:m,error}=await sb.from('chat_messages').insert(row).select().single();if(error)return alert(error.message);$('ctext').value='';$('cfile').value='';draw(m)};
+}
+
+/* ---- portfolio uploader ---- */
+$('pf').onsubmit=async e=>{e.preventDefault();$('pmsg').textContent='Publishing…';
+ try{let video=$('p_vurl').value.trim()||null;const f=$('p_vfile').files[0];
+  if(f){const path=`videos/${Date.now()}_${f.name.replace(/[^\w.\-]/g,'_')}`;const{error}=await sb.storage.from('project-media').upload(path,f);if(error)throw error;video=sb.storage.from('project-media').getPublicUrl(path).data.publicUrl}
+  const{error}=await sb.from('projects').insert({title:$('p_title').value.trim(),problem_solved:$('p_prob').value.trim(),capabilities:$('p_caps').value.split('\n').map(s=>s.trim()).filter(Boolean),description:$('p_desc').value.trim(),live_url:$('p_live').value.trim()||null,video_url:video});
+  if(error)throw error;$('pf').reset();$('pmsg').textContent='Published.';loadProj()}catch(err){$('pmsg').textContent=err.message}};
+async function loadProj(){const{data}=await sb.from('projects').select('id,title,published').order('created_at',{ascending:false});
+ $('plist').innerHTML=(data||[]).map(p=>`<div class="card flex justify-between items-center"><span>${esc(p.title)}</span><span class="flex gap-2"><button class="btn2" data-t="${p.id}" data-v="${p.published}">${p.published?'Hide':'Show'}</button><button class="btn2" data-d="${p.id}">Delete</button></span></div>`).join('');
+ $('plist').querySelectorAll('[data-t]').forEach(b=>b.onclick=async()=>{await sb.from('projects').update({published:b.dataset.v!=='true'}).eq('id',b.dataset.t);loadProj()});
+ $('plist').querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(confirm('Delete project?')){await sb.from('projects').delete().eq('id',b.dataset.d);loadProj()}})}
+</script></body></html>
