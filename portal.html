@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" class="dark"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client Portal | Zynex Core</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Sora','sans-serif']},colors:{cy:'#00B4D8'}}}}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>body{font-family:Sora,sans-serif}.field{width:100%;border-radius:.5rem;border:1px solid rgb(148 163 184/.4);background:transparent;padding:.5rem .7rem;font-size:.875rem}.field:focus{outline:2px solid #00B4D8}.btn{padding:.5rem 1rem;border-radius:.5rem;background:#00B4D8;color:#04202a;font-weight:600;font-size:.875rem}.btn2{padding:.5rem 1rem;border-radius:.5rem;border:1px solid rgb(148 163 184/.5);font-size:.875rem}.card{border:1px solid rgb(148 163 184/.3);border-radius:.75rem;padding:1rem}</style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-[#070B12] dark:text-slate-200">
+<header class="border-b border-slate-200 dark:border-white/10"><div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+ <a href="index.html" class="font-extrabold"><span>ZYNEX</span> <span class="text-cy">CORE</span> <span class="text-xs font-normal text-slate-500 ml-2">Client portal</span></a>
+ <div class="flex gap-3 items-center"><button id="theme" class="btn2">Theme</button><button id="out" class="btn2">Sign out</button></div></div></header>
+<main class="max-w-6xl mx-auto px-4 py-6 grid lg:grid-cols-3 gap-6">
+ <aside><h2 class="font-bold mb-3">Your orders</h2><div id="list" class="space-y-2"></div><a href="index.html#order" class="btn2 inline-block mt-4">New order</a></aside>
+ <section id="detail" class="lg:col-span-2 text-slate-500">Select an order.</section>
+</main>
+
+<div id="payModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div class="w-full max-w-md rounded-xl bg-white dark:bg-[#0c121c] p-6 space-y-3">
+ <div class="flex justify-between"><h3 class="font-bold text-lg">Pay for your project</h3><button onclick="payModal.classList.add('hidden')">×</button></div>
+ <div id="payBody" class="text-sm space-y-3"></div></div></div>
+
+<script>
+const SUPABASE_URL='https://klzzixqaqhmiwwglsoda.supabase.co', SUPABASE_ANON_KEY='sb_publishable_jNskkayIkO8uUGHKhcuyaA_sRV2LHc9';
+const WORKER_URL='https://zynex-api.zynexcorehq.workers.dev/'; // https://zynex-ai.YOUR-SUBDOMAIN.workers.dev
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY), $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>n==null?'to be confirmed':'$'+Number(n).toLocaleString();
+let me, cur, chan='order', timer, rt=[];
+$('theme').onclick=()=>document.documentElement.classList.toggle('dark');
+$('out').onclick=async()=>{await sb.auth.signOut();location='index.html'};
+
+(async()=>{const{data:{session}}=await sb.auth.getSession(); if(!session){location='index.html';return} me=session.user; loadList(); sb.channel('ord').on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>{loadList(); if(cur)open(cur.id,true)}).subscribe()})();
+
+async function loadList(){
+ const{data}=await sb.from('orders').select('id,status,system_description,created_at').order('created_at',{ascending:false});
+ $('list').innerHTML=(data||[]).map(o=>`<button data-id="${o.id}" class="card w-full text-left hover:border-cy"><div class="text-xs text-cy">${o.status.replace(/_/g,' ')}</div><div class="text-sm truncate">${esc(o.system_description)}</div></button>`).join('')||'<p class="text-sm text-slate-500">No orders yet.</p>';
+ $('list').querySelectorAll('button').forEach(b=>b.onclick=()=>open(b.dataset.id));
+}
+
+async function open(id,keepChat){
+ const{data:o}=await sb.from('orders').select('*').eq('id',id).single(); cur=o;
+ const paid=['paid','completed'].includes(o.status);
+ const tier=o.tier===2?`Tier 2: build ${money(o.build_price)} + 3 months free maintenance, then ${o.subscription_plan||'monthly/yearly'} plan ${money(o.subscription_price)}`:o.tier===1?`Tier 1: one-time build ${money(o.build_price)}`:'Pricing is set when we accept your order.';
+ let act='';
+ if(o.status==='awaiting_approval')act=`<div class="card border-cy"><b>Payment and scope approval</b><p class="text-sm my-2">${tier}</p><p class="text-xs text-slate-500">Approving starts development. You pay only after the 3-day trial.</p><button id="approve" class="btn mt-3">Approve and start development</button></div>`;
+ if(o.status==='trial')act=`<div class="card border-cy"><b>3-day trial</b><p id="clock" class="text-2xl font-bold my-2"></p><a class="btn inline-block" href="${esc(o.trial_url)}" target="_blank" rel="noopener">Open trial environment</a><button id="ready" class="btn2 ml-2">I'm satisfied, proceed to payment</button></div>`;
+ if(o.status==='awaiting_payment')act=`<div class="card border-cy"><b>Ready for payment</b><p class="text-sm my-2">${tier}</p><button id="pay" class="btn">Pay ${money(o.build_price)}</button></div>`;
+ if(paid)act=`<div class="card border-emerald-500"><b>Paid. Your project is unlocked.</b>${o.delivery_url?`<p class="mt-2"><a class="btn inline-block" href="${esc(o.delivery_url)}" target="_blank" rel="noopener">Open delivered project</a></p>`:'<p class="text-sm mt-2">We are preparing your delivery link.</p>'}</div>`;
+ $('detail').className='lg:col-span-2 space-y-4 text-slate-800 dark:text-slate-200';
+ $('detail').innerHTML=`<div class="card"><div class="text-xs text-cy">${o.status.replace(/_/g,' ')}</div><p class="mt-1 text-sm whitespace-pre-line">${esc(o.system_description)}</p><p class="text-xs text-slate-500 mt-2">${tier}</p></div>${act}
+ <div class="card"><div class="flex justify-between items-center"><b>Offers</b><button id="reqOffer" class="btn2" ${paid?'disabled':''}>Request offer</button></div><div id="offers" class="mt-3 space-y-2 text-sm"></div></div>
+ <div class="card"><div class="flex gap-2 mb-3"><button id="tOrder" class="btn">Order chat</button><button id="tSupport" class="btn2">Support and maintenance ${paid?'':'(locked)'}</button></div><div id="chat"></div></div>`;
+ if($('approve'))$('approve').onclick=async()=>{await sb.rpc('client_approve_scope',{oid:o.id});};
+ if($('ready'))$('ready').onclick=async()=>{await sb.rpc('client_ready_to_pay',{oid:o.id});};
+ if($('pay'))$('pay').onclick=()=>payUI(o);
+ if($('clock')){clearInterval(timer);const t=()=>{const ms=new Date(o.trial_ends_at)-Date.now();$('clock').textContent=ms<=0?'Trial ended':`${Math.floor(ms/864e5)}d ${Math.floor(ms%864e5/36e5)}h ${Math.floor(ms%36e5/6e4)}m left`};t();timer=setInterval(t,3e4)}
+ $('reqOffer').onclick=async()=>{const a=parseFloat(prompt('Your proposed budget in USD:'));if(!(a>0))return;const n=prompt('Short note (optional):')||'';await sb.from('offers').insert({order_id:o.id,from_role:'client',amount:a,note:n});loadOffers()};
+ $('tOrder').onclick=()=>{chan='order';chatUI(o,paid)}; $('tSupport').onclick=()=>{if(!paid)return alert('Support chat unlocks after payment.');chan='support';chatUI(o,paid)};
+ loadOffers(); if(!keepChat)chan='order'; chatUI(o,paid);
+}
+
+async function loadOffers(){
+ const{data}=await sb.from('offers').select('*').eq('order_id',cur.id).order('created_at');
+ $('offers').innerHTML=(data||[]).map(f=>`<div class="flex justify-between items-center border-b border-slate-300/30 pb-2"><span>${f.from_role==='client'?'You':'Zynex'}: <b>${money(f.amount)}</b> <span class="text-xs text-slate-500">${esc(f.note||'')}</span></span>
+ ${f.from_role==='admin'&&f.status==='pending'?`<span><button class="btn" data-a="1" data-id="${f.id}">Accept</button> <button class="btn2" data-a="0" data-id="${f.id}">Decline</button></span>`:`<span class="text-xs text-cy">${f.status}</span>`}</div>`).join('')||'<p class="text-slate-500">No offers yet. Request one to propose a custom budget.</p>';
+ $('offers').querySelectorAll('button').forEach(b=>b.onclick=async()=>{await sb.rpc('client_respond_offer',{offer_id:b.dataset.id,accept:b.dataset.a==='1'});loadOffers();open(cur.id,true)});
+}
+
+/* ---- chat (shared pattern with admin.html) ---- */
+async function chatUI(o,paid){
+ rt.forEach(c=>sb.removeChannel(c));rt=[];
+ $('tOrder').className=chan==='order'?'btn':'btn2'; $('tSupport').className=chan==='support'?'btn':'btn2';
+ $('chat').innerHTML=`<div id="msgs" class="h-72 overflow-y-auto space-y-2 mb-3"></div><form id="cf" class="flex gap-2"><label class="btn2 cursor-pointer">Attach<input id="cfile" type="file" class="hidden"></label><input id="ctext" class="field" placeholder="Message…" autocomplete="off"><button class="btn">Send</button></form>`;
+ const draw=async m=>{const mine=m.sender_id===me.id;let f='';if(m.file_path){const{data}=await sb.storage.from('order-files').createSignedUrl(m.file_path,3600);const img=(m.file_type||'').startsWith('image/');f=data?(img?`<a href="${data.signedUrl}" target="_blank"><img src="${data.signedUrl}" class="max-w-[200px] rounded mt-1"></a>`:`<a class="underline block mt-1" href="${data.signedUrl}" target="_blank">${esc(m.file_name)}</a>`):''}
+  const d=document.createElement('div');d.className=`max-w-[80%] rounded-lg px-3 py-2 text-sm ${mine?'ml-auto bg-cy text-[#04202a]':'bg-slate-200 dark:bg-white/10'}`;d.innerHTML=esc(m.body||'')+f;$('msgs').appendChild(d);$('msgs').scrollTop=1e9};
+ const{data}=await sb.from('chat_messages').select('*').eq('order_id',o.id).eq('channel',chan).order('created_at');
+ for(const m of data||[])await draw(m);
+ rt.push(sb.channel('c'+o.id+chan).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:`order_id=eq.${o.id}`},p=>{if(p.new.channel===chan&&p.new.sender_id!==me.id)draw(p.new)}).subscribe());
+ $('cf').onsubmit=async e=>{e.preventDefault();const body=$('ctext').value.trim(),f=$('cfile').files[0];if(!body&&!f)return;
+  const row={order_id:o.id,channel:chan,sender_id:me.id,body};
+  if(f){if(f.size>50*1048576)return alert('File over 50 MB');const path=`${o.client_id}/${Date.now()}_${f.name.replace(/[^\w.\-]/g,'_')}`;const{error}=await sb.storage.from('order-files').upload(path,f);if(error)return alert(error.message);Object.assign(row,{file_path:path,file_name:f.name,file_type:f.type})}
+  const{data:m,error}=await sb.from('chat_messages').insert(row).select().single();if(error)return alert(error.message);$('ctext').value='';$('cfile').value='';draw(m)};
+}
+
+/* ---- payment checkout modal ---- */
+function payUI(o){
+ payModal.classList.remove('hidden');
+ $('payBody').innerHTML=`<p>Amount due: <b>${money(o.build_price)}</b></p>
+ ${WORKER_URL?`<button id="stripeBtn" class="btn w-full">Pay by card (Stripe)</button>`:''}
+ ${o.payment_link?`<a class="btn inline-block w-full text-center" href="${esc(o.payment_link)}" target="_blank" rel="noopener">Open payment link</a>`:''}
+ ${o.payment_note?`<div class="card"><b>Bank / crypto transfer</b><p class="whitespace-pre-line mt-1">${esc(o.payment_note)}</p></div>`:''}
+ <p class="text-xs text-slate-500">After a bank or crypto transfer, tell us in the order chat. We confirm manually and your project unlocks.</p><p id="payErr" class="text-red-400"></p>`;
+ if($('stripeBtn'))$('stripeBtn').onclick=async()=>{const{data:{session}}=await sb.auth.getSession();const r=await fetch(WORKER_URL+'/checkout',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},body:JSON.stringify({order_id:o.id,return_url:location.href})});const j=await r.json();j.url?location=j.url:$('payErr').textContent=j.error||'Checkout failed.'};
+}
+</script></body></html>
