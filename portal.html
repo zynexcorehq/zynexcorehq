@@ -23,7 +23,7 @@
 
 <script>
 const SUPABASE_URL='https://klzzixqaqhmiwwglsoda.supabase.co', SUPABASE_ANON_KEY='sb_publishable_jNskkayIkO8uUGHKhcuyaA_sRV2LHc9';
-const WORKER_URL='https://zynex-api.zynexcorehq.workers.dev/'; // https://zynex-ai.YOUR-SUBDOMAIN.workers.dev
+const WORKER_URL='https://zynex-api.zynexcorehq.workers.dev'; // https://zynex-ai.YOUR-SUBDOMAIN.workers.dev
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY), $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>n==null?'to be confirmed':'$'+Number(n).toLocaleString();
