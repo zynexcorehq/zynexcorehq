@@ -198,13 +198,16 @@ function openAuth(mode){ authMode = mode || authMode; renderAuth(); $('authModal
 function closeAuth(){ $('authModal').classList.add('hidden'); }
 function renderAuth(){
   const up = authMode === 'up';
-  $('authTitle').textContent = up ? 'Create account' : 'Sign in';
+  $('authTitle').textContent = user ? 'Your Account' : (up ? 'Create account' : 'Sign in');
   $('authSubmit').textContent = up ? 'Create account' : 'Sign in';
   $('a_name').classList.toggle('hidden', !up);
   $('authSwitch').textContent = up ? 'Have an account? Sign in' : 'New here? Create an account';
-  $('authForm').classList.toggle('hidden', !!user); $('authSwitch').classList.toggle('hidden', !!user);
+  $('authForm').classList.toggle('hidden', !!user);
+  $('authSwitch').classList.toggle('hidden', !!user);
   $('signOutBtn').classList.toggle('hidden', !user);
-  $('authErr').textContent = '';
+  $('authErr').style.color = '#f87171';
+  $('authErr').textContent = user ? `Signed in as ${user.email}` : '';
+  if (user) $('authErr').style.color = '#34d399';
 }
 $('authSwitch').onclick = () => { authMode = authMode === 'up' ? 'in' : 'up'; renderAuth(); };
 $('authBtn').onclick = () => user ? openAuth() : openAuth('in');
@@ -212,26 +215,39 @@ $('signOutBtn').onclick = async () => { await sb.auth.signOut(); closeAuth(); };
 $('authForm').onsubmit = async e => {
   e.preventDefault();
   const email = $('a_email').value.trim(), password = $('a_pass').value, name = $('a_name').value.trim();
+  $('authErr').style.color = '#f87171';
   if (!/^\S+@\S+\.\S+$/.test(email)) return $('authErr').textContent = 'Enter a valid email address.';
   if (password.length < 8) return $('authErr').textContent = 'Password must be at least 8 characters.';
   if (authMode === 'up' && !name) return $('authErr').textContent = 'Enter your full name.';
   $('authSubmit').disabled = true;
-  const { error } = authMode === 'up'
+  const { data, error } = authMode === 'up'
     ? await sb.auth.signUp({ email, password, options: { data: { full_name: name } } })
     : await sb.auth.signInWithPassword({ email, password });
   $('authSubmit').disabled = false;
   if (error) return $('authErr').textContent = error.message;
-  if (authMode === 'up') { $('authErr').style.color = '#34d399'; $('authErr').textContent = 'Check your email to confirm, then sign in.'; return; }
+  if (authMode === 'up' && !data?.session) {
+    $('authErr').style.color = '#34d399';
+    $('authErr').textContent = 'Check your email to confirm, then sign in.';
+    return;
+  }
   closeAuth();
 };
-async function applySession(session){
+function applySession(session){
   user = session?.user || null; isAdmin = false;
-  if (user) { const { data } = await sb.from('profiles').select('role').eq('id', user.id).single(); isAdmin = data?.role === 'admin'; }
   $('authBtn').textContent = user ? 'Account' : 'Sign in';
   $('portalLink').classList.toggle('hidden', !user);
-  $('portalLink').href = isAdmin ? 'admin.html' : 'portal.html';
-  $('adminAdd').classList.toggle('hidden', !isAdmin);
   if (user && !$('o_email').value) $('o_email').value = user.email;
+  if (user) {
+    setTimeout(async () => {
+      const { data } = await sb.from('profiles').select('role').eq('id', user.id).maybeSingle();
+      isAdmin = data?.role === 'admin';
+      $('portalLink').href = isAdmin ? 'admin.html' : 'portal.html';
+      $('portalLink').textContent = isAdmin ? 'Admin panel' : 'My portal';
+      $('adminAdd').classList.toggle('hidden', !isAdmin);
+    }, 0);
+  } else {
+    $('adminAdd').classList.add('hidden');
+  }
 }
 sb.auth.onAuthStateChange((_e, s) => applySession(s));
 sb.auth.getSession().then(({ data }) => applySession(data.session));
