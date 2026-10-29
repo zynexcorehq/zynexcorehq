@@ -1996,12 +1996,14 @@ a { text-decoration: none; }
 
     panel.innerHTML = buildMainHTML(activeOrder);
 
+    // 1. මුලින්ම Chat Send බොත්තම සහ File Preview එක සක්‍රීය කිරීම
+    bindComposer();
+    renderChatPreview();
+    subscribeChat();
+
+    // 2. ඊට පස්සේ පරණ මැසේජ් සහ ෆයිල් ලෝඩ් කිරීම
     hydrateOrderAttachments(activeOrder);
     await renderChatMessages();
-    renderChatPreview();
-
-    subscribeChat();
-    bindComposer();
   }
 
   async function hydrateOrderAttachments(o) {
